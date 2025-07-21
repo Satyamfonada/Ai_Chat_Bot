@@ -74,33 +74,35 @@ const ChatBot: React.FC = () => {
     }
   };
 
-  const handleNewChat = async () => {
-    try {
-      setIsLoading(true);
-      const newSession = await createChatSession("New Chat");
-      // Add new session to the top of the list
-      setSessions((prev) => [newSession, ...prev]);
-      setCurrentSessionId(newSession.id);
-      setMessages([]);
-    } catch (error) {
-      console.error("Error creating new chat:", error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleNewChat = () => {
+    setCurrentSessionId(null);
+    setMessages([]);
+    setInput("");
   };
 
   const handleSend = async () => {
-    if (!input.trim() || !currentSessionId || isLoading) return;
+    if (!input.trim() || isLoading) return;
+
+    setIsLoading(true);
+    let sessionId = currentSessionId;
+    let newSession: ChatSession | null = null;
+
+    // If no session exists, create one now
+    if (!sessionId) {
+      newSession = await createChatSession("New Chat");
+      setSessions((prev) => [newSession as ChatSession, ...prev]);
+      setCurrentSessionId(newSession.id);
+      sessionId = newSession.id;
+    }
 
     const userMessage = input;
     setInput("");
-    setIsLoading(true);
 
     try {
       // Add user message to UI immediately
       const userMsg: ChatMessage = {
         id: Date.now().toString(),
-        session_id: currentSessionId,
+        session_id: sessionId!,
         message: userMessage,
         sender: 'user',
         created_at: new Date().toISOString()
@@ -108,17 +110,17 @@ const ChatBot: React.FC = () => {
       setMessages(prev => [...prev, userMsg]);
 
       // Send message to database
-      await sendMessage(currentSessionId, userMessage);
+      await sendMessage(sessionId!, userMessage);
 
       // Check if the session name is "New Chat" and update it
-      const currentSession = sessions.find(s => s.id === currentSessionId);
+      const currentSession = (newSession || sessions.find(s => s.id === sessionId));
       if (currentSession && currentSession.name === "New Chat") {
         const sessionName = generateSessionName(userMessage);
-        await updateSessionName(currentSessionId, sessionName);
+        await updateSessionName(sessionId!, sessionName);
         // Update session name in the UI
         setSessions(prev =>
-          prev.map(s => s.id === currentSessionId ? { ...s, name: sessionName, updated_at: new Date().toISOString() } : s)
-             .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()) // Re-sort sessions
+          prev.map(s => s.id === sessionId ? { ...s, name: sessionName, updated_at: new Date().toISOString() } : s)
+             .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
         );
       }
 
@@ -128,7 +130,7 @@ const ChatBot: React.FC = () => {
       // Add bot message to UI
       const botMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        session_id: currentSessionId,
+        session_id: sessionId!,
         message: botReply,
         sender: 'bot',
         created_at: new Date().toISOString()
@@ -136,7 +138,7 @@ const ChatBot: React.FC = () => {
       setMessages(prev => [...prev, botMsg]);
 
       // Send bot reply to database
-      await sendBotReply(currentSessionId, botReply);
+      await sendBotReply(sessionId!, botReply);
 
     } catch (error) {
       console.error("Error sending message:", error);
@@ -163,8 +165,9 @@ const ChatBot: React.FC = () => {
         if (remainingSessions.length > 0) {
           setCurrentSessionId(remainingSessions[0].id);
         } else {
-          // If no sessions are left, create a new one
-          handleNewChat();
+          // If no sessions are left, just clear the UI state
+          setCurrentSessionId(null);
+          setMessages([]);
         }
       }
     } catch (error) {
@@ -283,6 +286,11 @@ const ChatBot: React.FC = () => {
             Send
           </button>
         </footer>
+        <div className="search-area-footer">
+  AI Bot crafted with <span style={{ color: 'red', fontSize: '1.5em' }}>&hearts;</span> by <strong>Satyam</strong>.
+  For any queries, feel free to reach out at <a href="mailto:satyamsrivastava1212@gmail.com">📩satyamsrivastava1212@gmail.com</a>
+</div>
+
       </main>
     </div>
   );
