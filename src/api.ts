@@ -153,7 +153,7 @@ export const getBotReply = async (userMessage: string): Promise<string> => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer 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`,
+        Authorization: `Bearer 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`,
       },
       body: JSON.stringify({
         model: "deepseek/deepseek-chat:free",

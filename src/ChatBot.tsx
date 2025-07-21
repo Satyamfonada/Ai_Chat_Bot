@@ -14,6 +14,7 @@ import {
 } from "./api.ts";
 import MarkdownRenderer from './MarkdownRenderer.tsx'; // Import the new component
 import "./chatbot.css";
+import { useNavigate } from 'react-router-dom';
 
 const ChatBot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -23,6 +24,7 @@ const ChatBot: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true); // Start with loading true
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const isInitialized = useRef(false); // Ref to track initialization
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Prevent this effect from running more than once
@@ -194,13 +196,24 @@ const ChatBot: React.FC = () => {
     return date.toLocaleDateString();
   };
 
+  const handleLogout = () => {
+    console.log('Logout button clicked. Clearing localStorage and redirecting to /login');
+    localStorage.clear();
+    navigate('/login', { replace: true });
+    setTimeout(() => {
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }, 200);
+  };
+
   return (
     <div className="app-container">
       <aside className="sidebar">
         <button className="new-chat-button" onClick={handleNewChat}>
           + New Chat
         </button>
-
+        {/* Removed sidebar logout button */}
         <div className="sessions-list">
           {sessions.map((session) => (
             <div
@@ -225,8 +238,28 @@ const ChatBot: React.FC = () => {
       </aside>
 
       <main className="chat-window">
-        <header className="chat-header">
+        <header className="chat-header" style={{ position: 'relative' }}>
           { "🤖 Your AI Assistant"}
+          <button
+            onClick={handleLogout}
+            style={{
+              position: 'absolute',
+              right: 20,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '6px 16px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '1em',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+            }}
+          >
+            Logout
+          </button>
         </header>
 
         <div className="chat-messages">

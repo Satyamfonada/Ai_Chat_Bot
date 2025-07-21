@@ -1,11 +1,14 @@
 {
   "dependencies": {
     "@supabase/supabase-js": "^2.52.0",
+    "@types/react-router-dom": "^5.3.3",
     "@types/react-syntax-highlighter": "^15.5.13",
     "axios": "^1.10.0",
+    "bcryptjs": "^3.0.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.7.0",
     "react-scripts": "^5.0.1",
     "react-syntax-highlighter": "^15.6.1",
     "remark-gfm": "^4.0.1"
