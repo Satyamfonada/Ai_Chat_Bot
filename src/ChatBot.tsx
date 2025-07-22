@@ -26,6 +26,10 @@ const ChatBot: React.FC = () => {
   const isInitialized = useRef(false); // Ref to track initialization
   const navigate = useNavigate();
 
+  // Get the current user from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const username = user.username || '';
+
   useEffect(() => {
     // Prevent this effect from running more than once
     if (isInitialized.current) return;
@@ -34,13 +38,13 @@ const ChatBot: React.FC = () => {
     const initializeChat = async () => {
       setIsLoading(true);
       try {
-        const existingSessions = await fetchChatSessions();
+        const existingSessions = await fetchChatSessions(username);
         if (existingSessions.length > 0) {
           setSessions(existingSessions);
           setCurrentSessionId(existingSessions[0].id);
         } else {
           // If no sessions exist, create one
-          const newSession = await createChatSession("New Chat");
+          const newSession = await createChatSession("New Chat", username);
           setSessions([newSession]);
           setCurrentSessionId(newSession.id);
         }
@@ -52,7 +56,7 @@ const ChatBot: React.FC = () => {
     };
 
     initializeChat();
-  }, []);
+  }, [username]);
 
   useEffect(() => {
     if (currentSessionId) {
@@ -91,7 +95,7 @@ const ChatBot: React.FC = () => {
 
     // If no session exists, create one now
     if (!sessionId) {
-      newSession = await createChatSession("New Chat");
+      newSession = await createChatSession("New Chat", username);
       setSessions((prev) => [newSession as ChatSession, ...prev]);
       setCurrentSessionId(newSession.id);
       sessionId = newSession.id;

@@ -17,26 +17,25 @@ export interface ChatMessage {
   created_at: string;
 }
 
-// Fetch all chat sessions
-export const fetchChatSessions = async (): Promise<ChatSession[]> => {
-  const { data, error } = await supabase
-    .from('chat_sessions')
-    .select('*')
-    .order('updated_at', { ascending: false });
-
+// Fetch chat sessions for a specific user (or all if admin)
+export const fetchChatSessions = async (username: string): Promise<ChatSession[]> => {
+  let query = supabase.from('chat_sessions').select('*').order('updated_at', { ascending: false });
+  if (username !== 'Admin') {
+    query = query.eq('username', username);
+  }
+  const { data, error } = await query;
   if (error) {
     console.error('Supabase error:', error);
     throw error;
   }
-
   return data || [];
 };
 
 // Create a new chat session
-export const createChatSession = async (name: string): Promise<ChatSession> => {
+export const createChatSession = async (name: string, username: string): Promise<ChatSession> => {
   const { data, error } = await supabase
     .from('chat_sessions')
-    .insert([{ name }])
+    .insert([{ name, username }])
     .select()
     .single();
 
@@ -153,10 +152,10 @@ export const getBotReply = async (userMessage: string): Promise<string> => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer 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`,
+        Authorization: `Bearer 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`,
       },
       body: JSON.stringify({
-        model: "deepseek/deepseek-chat:free",
+        model: "qwen/qwen3-235b-a22b-07-25:free",
         messages: [
           { role: "system", content: "You are a helpful AI assistant." },
           { role: "user", content: userMessage },
